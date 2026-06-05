@@ -1,0 +1,85 @@
+# =========================
+# Python cache files
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual Environment
+# =========================
+venv/
+env/
+ENV/
+.env/
+
+# =========================
+# Streamlit
+# =========================
+.streamlit/
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Model Files (ML artifacts)
+# =========================
+*.pkl
+*.joblib
+
+# Keep structure but ignore heavy models
+# (optional if you want to push models manually)
+# models/*.pkl
+
+# =========================
+# Data backups / sensitive files
+# =========================
+*.csv
+*.xlsx
+*.json
+
+# If you WANT dataset in repo, remove above CSV rule
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Reports (generated files)
+# =========================
+reports/generated_reports/
+*.pdf
+*.txt
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Deployment
+# =========================
+dist/
+build/
+*.egg-info/
+
+# =========================
+# Environment variables
+# =========================
+.env.local
+.env.production
+
+# =========================
+# HuggingFace / cache (optional)
+# =========================
+.cache/
