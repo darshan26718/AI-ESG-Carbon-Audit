@@ -1,4 +1,4 @@
-# pages/5_SHAP_Explainability.py
+# pages/6_SHAP_Explainability.py
 
 import streamlit as st
 import pandas as pd
