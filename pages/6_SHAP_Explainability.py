@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 import joblib
 import shap
 import matplotlib.pyplot as plt
@@ -17,18 +18,32 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🔍 SHAP Explainability Dashboard")
+st.title("🔍 AI Explainable Maintenance (SHAP)")
 st.markdown("""
-Understand how the AI model makes predictive maintenance decisions using SHAP (SHapley Additive exPlanations).
+Understand why the AI model predicts **machine failure risk** using SHAP.
 """)
 
 # =====================================================
-# LOAD MODEL
+# SAFE MODEL LOADER (FIXES YOUR ERROR)
 # =====================================================
 
 @st.cache_resource
 def load_model():
-    return joblib.load("models/maintenance_xgb_model.pkl")
+
+    model_path = "models/maintenance_xgb_model.pkl"
+
+    if not os.path.exists(model_path):
+        st.error("❌ Missing model: models/maintenance_xgb_model.pkl")
+        st.stop()
+
+    try:
+        model = joblib.load(model_path)
+        return model
+
+    except Exception as e:
+        st.error("❌ Model loading failed (pickle/version mismatch)")
+        st.exception(e)
+        st.stop()
 
 model = load_model()
 
@@ -43,33 +58,39 @@ def load_data():
 
 df = load_data()
 
-TARGET_COLUMN = "Failure"
+TARGET = "Failure"
 
-X = df.drop(columns=[TARGET_COLUMN])
+X = df.drop(columns=[TARGET])
 
-# Handle categorical columns if present
+# Encode categorical columns safely
 X = pd.get_dummies(X, drop_first=True)
 
 # =====================================================
-# SHAP EXPLAINER
+# SHAP EXPLAINER (SAFE VERSION)
 # =====================================================
 
-with st.spinner("Generating SHAP explanations..."):
+st.subheader("📊 SHAP Model Explanation")
 
+try:
     explainer = shap.TreeExplainer(model)
+except Exception:
+    st.warning("TreeExplainer failed → switching to generic SHAP Explainer")
+    explainer = shap.Explainer(model)
 
-    sample_size = min(500, len(X))
-    X_sample = X.sample(sample_size, random_state=42)
+# Sample data (fast performance)
+sample_size = min(300, len(X))
+X_sample = X.sample(sample_size, random_state=42)
 
-    shap_values = explainer.shap_values(X_sample)
+# SHAP values
+shap_values = explainer(X_sample)
 
 # =====================================================
-# FEATURE IMPORTANCE
+# GLOBAL FEATURE IMPORTANCE
 # =====================================================
 
-st.subheader("📊 Global Feature Importance")
+st.subheader("📌 Feature Importance (Global)")
 
-fig1, ax1 = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots()
 
 shap.summary_plot(
     shap_values,
@@ -78,7 +99,7 @@ shap.summary_plot(
     show=False
 )
 
-st.pyplot(fig1)
+st.pyplot(fig)
 
 # =====================================================
 # SHAP SUMMARY PLOT
@@ -86,7 +107,7 @@ st.pyplot(fig1)
 
 st.subheader("📈 SHAP Summary Plot")
 
-fig2, ax2 = plt.subplots(figsize=(10, 6))
+fig2, ax2 = plt.subplots()
 
 shap.summary_plot(
     shap_values,
@@ -97,89 +118,63 @@ shap.summary_plot(
 st.pyplot(fig2)
 
 # =====================================================
-# FEATURE CONTRIBUTION
+# INDIVIDUAL PREDICTION EXPLANATION
 # =====================================================
 
-st.subheader("🎯 Explain Individual Prediction")
+st.subheader("🎯 Individual Prediction Explanation")
 
 selected_index = st.selectbox(
-    "Select Machine Record",
+    "Select Record",
     X_sample.index
 )
 
-selected_row = X.loc[[selected_index]]
+row = X.loc[[selected_index]]
 
-st.write("Selected Machine Data")
+st.write("Selected Input Data")
+st.dataframe(row)
 
-st.dataframe(selected_row)
+# Prediction
+prediction = model.predict(row)[0]
 
-individual_shap = explainer.shap_values(selected_row)
+st.metric("Prediction", "Failure" if prediction == 1 else "Healthy")
 
-prediction = model.predict(selected_row)[0]
-
-probability = model.predict_proba(selected_row)[0][1]
-
-st.metric(
-    "Failure Probability",
-    f"{probability:.2%}"
-)
-
-if prediction == 1:
-    st.error("⚠️ Predicted Failure")
-else:
-    st.success("✅ Machine Healthy")
+# SHAP for single row
+single_shap = explainer(row)
 
 # =====================================================
-# WATERFALL PLOT
+# WATERFALL PLOT (SAFE)
 # =====================================================
 
 st.subheader("🌊 SHAP Waterfall Explanation")
 
 try:
-
-    explanation = shap.Explanation(
-        values=individual_shap[0],
-        base_values=explainer.expected_value,
-        data=selected_row.iloc[0],
-        feature_names=selected_row.columns
-    )
-
-    fig3 = plt.figure(figsize=(12, 6))
+    fig3 = plt.figure()
 
     shap.plots.waterfall(
-        explanation,
+        single_shap[0],
         max_display=10,
         show=False
     )
 
     st.pyplot(fig3)
 
-except Exception as e:
-
-    st.warning(
-        "Waterfall visualization could not be generated."
-    )
+except Exception:
+    st.warning("Waterfall plot not supported for this model.")
 
 # =====================================================
 # TOP FEATURES TABLE
 # =====================================================
 
-st.subheader("🏆 Most Influential Features")
+st.subheader("🏆 Top Influencing Features")
 
-importance_df = pd.DataFrame({
+importance = pd.DataFrame({
     "Feature": X_sample.columns,
-    "Mean |SHAP Value|": np.abs(shap_values).mean(axis=0)
+    "Impact": np.abs(shap_values.values).mean(axis=0)
 })
 
-importance_df = importance_df.sort_values(
-    by="Mean |SHAP Value|",
-    ascending=False
-)
+importance = importance.sort_values(by="Impact", ascending=False)
 
-st.dataframe(
-    importance_df,
-    use_container_width=True
-)
+st.dataframe(importance)
 
 # =====================================================
 # INSIGHTS
@@ -187,31 +182,24 @@ st.dataframe(
 
 st.subheader("💡 AI Insights")
 
-top_feature = importance_df.iloc[0]["Feature"]
+top_feature = importance.iloc[0]["Feature"]
 
-st.info(
-    f"""
-    The most important feature influencing maintenance failure predictions
-    is **{top_feature}**.
+st.info(f"""
+Most influential factor: **{top_feature}**
 
-    Higher SHAP values increase failure risk,
-    while lower SHAP values decrease failure risk.
-
-    Use this information to proactively schedule maintenance
-    before equipment breakdown occurs.
-    """
-)
+This feature has the highest impact on machine failure prediction.
+""")
 
 # =====================================================
 # DOWNLOAD REPORT
 # =====================================================
 
-csv = importance_df.to_csv(index=False)
+csv = importance.to_csv(index=False)
 
 st.download_button(
-    label="📥 Download SHAP Importance Report",
+    label="📥 Download SHAP Report",
     data=csv,
-    file_name="shap_feature_importance.csv",
+    file_name="shap_report.csv",
     mime="text/csv"
 )
 
@@ -220,6 +208,4 @@ st.download_button(
 # =====================================================
 
 st.markdown("---")
-st.caption(
-    "AI ESG Predictive Maintenance Platform | Explainable AI using SHAP"
-)
+st.caption("🔍 AI ESG Predictive Maintenance | SHAP Explainability Module")
