@@ -1,0 +1,74 @@
+┌─────────────────────────────────────┐
+│              DATA LAYER             │
+├─────────────────────────────────────┤
+│ carbon_emission_dataset.csv         │
+│ global_co2_emissions.csv            │
+│ maintenance_failure_dataset.csv     │
+│ esg_benchmark_dataset.csv           │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│       DATA PREPROCESSING LAYER      │
+├─────────────────────────────────────┤
+│ Missing Value Handling              │
+│ Feature Encoding                    │
+│ Scaling & Normalization             │
+│ Feature Engineering                 │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│       MACHINE LEARNING LAYER        │
+├─────────────────────────────────────┤
+│ Carbon Forecast Model               │
+│ ESG Scoring Model                   │
+│ Random Forest Maintenance Model     │
+│ XGBoost Maintenance Model           │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│       EXPLAINABLE AI LAYER          │
+├─────────────────────────────────────┤
+│ SHAP Analysis                       │
+│ Feature Importance                  │
+│ Prediction Interpretation           │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│       INTELLIGENCE LAYER            │
+├─────────────────────────────────────┤
+│ ESG Benchmarking                    │
+│ Climate Risk Assessment             │
+│ Green Investment Analysis           │
+│ Circular Economy Optimization       │
+│ AI Sustainability Advisor           │
+│ Net-Zero Planning                   │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│      REPORTING & INSIGHTS LAYER     │
+├─────────────────────────────────────┤
+│ ESG Reports                         │
+│ Carbon Reports                      │
+│ Climate Risk Reports                │
+│ Net-Zero Reports                    │
+│ PDF / Excel Export                  │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│        STREAMLIT APPLICATION        │
+├─────────────────────────────────────┤
+│ ESG Dashboard                       │
+│ Carbon Forecasting                  │
+│ Predictive Maintenance              │
+│ SHAP Explainability                 │
+│ ESG Scoring                         │
+│ Sustainability Advisor              │
+│ Net-Zero Planner                    │
+│ Benchmarking Dashboard              │
+└─────────────────────────────────────┘
